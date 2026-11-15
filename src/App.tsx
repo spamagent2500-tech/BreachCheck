@@ -216,6 +216,12 @@ function App() {
   const highCount = findings.filter((finding) => finding.severity === 'High').length
   const uniqueSources = new Set(visibleRecords.map((record) => record.source)).size
   const passwordMatches = passwordMeta?.matches ?? 0
+  const severitySummary: Array<{ label: Severity; count: number; tone: string; detail: string }> = [
+    { label: 'Critical', count: criticalCount, tone: 'critical', detail: 'Immediate action' },
+    { label: 'High', count: highCount, tone: 'high', detail: 'Prioritize review' },
+    { label: 'Medium', count: findings.filter((finding) => finding.severity === 'Medium').length, tone: 'medium', detail: 'Watch closely' },
+    { label: 'Low', count: findings.filter((finding) => finding.severity === 'Low').length, tone: 'low', detail: 'Stay aware' },
+  ]
 
   const showToast = (message: string) => {
     setToast(message)
@@ -476,6 +482,11 @@ function App() {
           <div className="section-heading findings-heading" id="findings"><div><span className="section-kicker">CHECKPOINT 03</span><h2>Merged exposure report</h2></div><div className="findings-actions"><button className="filter-button"><Filter size={14} /> All severities <ChevronDown size={14} /></button><button className="export-button" onClick={exportReport}><Download size={14} /> Export JSON</button></div></div>
           <section className="panel findings-panel">
             <div className="findings-summary"><div><span className="panel-kicker">ADDRESS UNDER REVIEW</span><strong>{email || 'No address entered'}</strong></div><div className="summary-pills"><span><b>{findings.length}</b> merged</span><span className="critical-summary"><b>{criticalCount}</b> critical</span><span className="high-summary"><b>{highCount}</b> high</span></div></div>
+            <div className="severity-overview" aria-label="Severity breakdown">
+              <div className="severity-overview-head"><div><span className="panel-kicker">RISK DISTRIBUTION</span><strong>{findings.length ? 'Scan the highest signals first.' : 'No active exposure in this report.'}</strong></div><span className="severity-total">{findings.length} {findings.length === 1 ? 'finding' : 'findings'}</span></div>
+              <div className="severity-bar" role="img" aria-label={severitySummary.map((item) => `${item.count} ${item.label}`).join(', ')}>{severitySummary.map((item) => item.count > 0 && <span key={item.label} className={`severity-bar-segment ${item.tone}`} style={{ width: `${(item.count / Math.max(findings.length, 1)) * 100}%` }} />)}</div>
+              <div className="severity-cards">{severitySummary.map((item) => <div className={`severity-card ${item.tone}`} key={item.label}><div className="severity-card-top"><span className="severity-card-count">{item.count}</span><span className="severity-card-label">{item.label}</span></div><span className="severity-card-detail">{item.detail}</span></div>)}</div>
+            </div>
             <div className="findings-list">{findings.length ? findings.map((finding, index) => <article className="finding-row" key={finding.id}><div className="finding-number">0{index + 1}</div><div className="finding-main"><div className="finding-title"><h3>{finding.name}</h3><span className={`severity-badge ${severityStyles[finding.severity]}`}>{finding.severity}</span></div><div className="finding-meta"><span>{formatDate(finding.date)}</span><span className="meta-separator" /> <span>{classList(finding.classes)}</span><span className="meta-separator" /> <span>{finding.sources.length > 1 ? 'API + local' : finding.sources[0]}</span></div><div className="finding-action"><Zap size={14} /><strong>Recommended:</strong> {finding.action}</div></div><div className="finding-rationale"><span>WHY THIS SCORE</span><p>{finding.rationale}</p></div></article>) : <div className="report-empty"><ShieldCheck size={27} /><h3>No matching exposure in the local fixtures</h3><p>Try the match demo address to see merged records and recommended actions.</p><button className="primary-button" onClick={() => { setEmail(demoEmail); window.setTimeout(() => runEmailCheck(), 0) }}>Load match demo <ArrowDownRight size={15} /></button></div>}</div>
             <div className="report-footer"><div><LockKeyhole size={14} /> Report generated locally at {formatTime(checkedAt)} · <span>non-production demo</span></div><button className="text-button" onClick={() => showToast('Report logic is deterministic and source-aware.')}>How scoring works <ArrowUpRight size={14} /></button></div>
           </section>
