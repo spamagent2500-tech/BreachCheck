@@ -50,7 +50,7 @@ type Finding = Omit<BreachRecord, 'id' | 'email' | 'source'> & {
   action: string
 }
 
-const demoEmail = 'alina.malik@northstar-labs.test'
+const demoEmail = 'cybernova@northstar-labs.test'
 
 const baseFixtures: BreachRecord[] = [
   {
@@ -395,7 +395,7 @@ function App() {
           <div className="topbar-actions">
             <div className="safe-badge"><WifiOff size={14} /> No live services connected</div>
             <button className="icon-button" aria-label="Refresh report" onClick={() => runEmailCheck()}><RefreshCw size={17} /></button>
-            <div className="avatar">AM</div>
+          <div className="avatar">CN</div>
           </div>
         </header>
 
