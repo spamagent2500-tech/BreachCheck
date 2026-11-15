@@ -401,16 +401,18 @@ function App() {
 
         <div className="content-wrap">
           <section className="hero-row" id="overview">
-            <div>
-              <div className="eyebrow"><span className="eyebrow-line" /> BREACH EXPOSURE / LAB 01</div>
+            <div className="hero-content">
+              <div className="eyebrow"><span className="eyebrow-line" /> LOCAL-FIRST SECURITY / WORKSPACE 01</div>
               <h1>See the signal.<br /><em>Keep the secret.</em></h1>
-              <p className="hero-copy">A privacy-first exposure checker for learning how breach intelligence works without handing over the data you are checking.</p>
+              <p className="hero-copy">A calm, local-first exposure checker for understanding breach intelligence without handing over the data you are checking.</p>
               <div className="hero-actions">
                 <button className="primary-button" onClick={() => document.getElementById('email')?.scrollIntoView({ behavior: 'smooth' })}>Run local check <ArrowDownRight size={16} /></button>
                 <button className="text-button" onClick={exportReport}><Download size={15} /> Export sample report</button>
               </div>
+              <div className="hero-proof"><span><LockKeyhole size={13} /> 0 external calls</span><span><Check size={13} /> Built for learning</span><span><WifiOff size={13} /> Offline-ready fixtures</span></div>
             </div>
             <div className="hero-visual" aria-label="Local-only signal visualization">
+              <div className="visual-heading"><span className="mini-status" /> SIGNAL MAP <b>LIVE</b></div>
               <div className="orb-ring ring-one" /><div className="orb-ring ring-two" /><div className="orb-core"><ShieldCheck size={28} /><span>LOCAL<br />ONLY</span></div>
               <div className="signal signal-one"><span /> prefix query</div>
               <div className="signal signal-two"><span /> local match</div>
