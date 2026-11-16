@@ -390,3 +390,13 @@ h1 em { color: #b4aaff; }
   .dataset-heading, .findings-heading { margin-top: 48px; }
   .finding-row { padding: 22px 16px; }
 }
+
+
+/* Sidebar composition: bottom-aligned workspace dock */
+.sidebar .side-nav {
+  margin-top: auto;
+  margin-bottom: 24px;
+}
+.sidebar .sidebar-bottom {
+  margin-top: 0;
+}
