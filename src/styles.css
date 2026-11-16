@@ -400,3 +400,18 @@ h1 em { color: #b4aaff; }
 .sidebar .sidebar-bottom {
   margin-top: 0;
 }
+
+
+/* Explicit bottom dock: brand stays top, controls stay grouped below */
+.sidebar .side-nav {
+  margin-top: auto;
+  margin-right: -4px;
+  margin-left: -4px;
+  margin-bottom: 18px;
+  padding: 18px 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+}
+.sidebar .nav-label { padding-top: 0; }
+.sidebar .sidebar-bottom {
+  padding-top: 2px;
+}
