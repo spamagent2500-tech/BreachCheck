@@ -50,6 +50,12 @@ type Finding = Omit<BreachRecord, 'id' | 'email' | 'source'> & {
   action: string
 }
 
+type RemediationStep = {
+  id: string
+  title: string
+  detail: string
+}
+
 const demoEmail = 'cybernova@northstar-labs.test'
 
 const baseFixtures: BreachRecord[] = [
@@ -193,6 +199,24 @@ function classList(classes: string[]) {
   return classes.map((item) => classLabels[item] ?? item).join(' · ')
 }
 
+function getRemediationSteps(finding: Finding): RemediationStep[] {
+  const steps: RemediationStep[] = []
+  if (finding.classes.includes('password')) {
+    steps.push({ id: 'rotate-password', title: 'Rotate the exposed password', detail: 'Change it anywhere it was reused and use a unique replacement.' })
+  }
+  if (finding.classes.includes('financial')) {
+    steps.push({ id: 'secure-financial', title: 'Secure payment and financial accounts', detail: 'Contact the provider, review recent activity, and replace exposed payment details.' })
+  }
+  if (finding.classes.includes('password') || finding.classes.includes('financial')) {
+    steps.push({ id: 'enable-mfa', title: 'Enable phishing-resistant MFA', detail: 'Prefer a passkey or security key; otherwise use an authenticator app.' })
+  }
+  if (finding.classes.some((item) => ['email', 'phone', 'address'].includes(item))) {
+    steps.push({ id: 'harden-recovery', title: 'Harden recovery and contact channels', detail: 'Verify recovery details and treat unexpected messages, calls, and links as suspicious.' })
+  }
+  steps.push({ id: 'monitor', title: 'Monitor for follow-on activity', detail: 'Watch account alerts and statements, and record any suspicious activity for follow-up.' })
+  return steps
+}
+
 function App() {
   const [activeSection, setActiveSection] = useState('overview')
   const [email, setEmail] = useState(demoEmail)
@@ -209,6 +233,15 @@ function App() {
   const [datasetMessage, setDatasetMessage] = useState('4 local demo rows loaded')
   const [toast, setToast] = useState('')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [completedRemediations, setCompletedRemediations] = useState<Record<string, string[]>>(() => {
+    try {
+      const stored = window.localStorage.getItem('breachcheck:remediations')
+      const parsed: unknown = stored ? JSON.parse(stored) : {}
+      return parsed && typeof parsed === 'object' ? parsed as Record<string, string[]> : {}
+    } catch {
+      return {}
+    }
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const findings = useMemo(() => mergeFindings(visibleRecords), [visibleRecords])
@@ -226,6 +259,17 @@ function App() {
   const showToast = (message: string) => {
     setToast(message)
     window.setTimeout(() => setToast(''), 2800)
+  }
+
+  const toggleRemediation = (findingId: string, stepId: string) => {
+    setCompletedRemediations((current) => {
+      const completed = new Set(current[findingId] ?? [])
+      if (completed.has(stepId)) completed.delete(stepId)
+      else completed.add(stepId)
+      const next = { ...current, [findingId]: Array.from(completed) }
+      window.localStorage.setItem('breachcheck:remediations', JSON.stringify(next))
+      return next
+    })
   }
 
   const runEmailCheck = (event?: FormEvent) => {
@@ -330,7 +374,15 @@ function App() {
         critical: criticalCount,
         high: highCount,
       },
-      findings: findings.map(({ id, ...finding }) => finding),
+      findings: findings.map((finding) => {
+        const { id, ...exportedFinding } = finding
+        return {
+          ...exportedFinding,
+          ...(finding.severity === 'Critical'
+            ? { remediation: getRemediationSteps(finding).map((step) => ({ ...step, completed: completedRemediations[id]?.includes(step.id) ?? false })) }
+            : {}),
+        }
+      }),
       password_check: passwordMeta
         ? { method: 'Local SHA-1 prefix/suffix comparison', prefix_sent: passwordMeta.prefix, local_matches: passwordMeta.matches }
         : { status: 'Not run' },
@@ -487,7 +539,7 @@ function App() {
               <div className="severity-bar" role="img" aria-label={severitySummary.map((item) => `${item.count} ${item.label}`).join(', ')}>{severitySummary.map((item) => item.count > 0 && <span key={item.label} className={`severity-bar-segment ${item.tone}`} style={{ width: `${(item.count / Math.max(findings.length, 1)) * 100}%` }} />)}</div>
               <div className="severity-cards">{severitySummary.map((item) => <div className={`severity-card ${item.tone}`} key={item.label}><div className="severity-card-top"><span className="severity-card-count">{item.count}</span><span className="severity-card-label">{item.label}</span></div><span className="severity-card-detail">{item.detail}</span></div>)}</div>
             </div>
-            <div className="findings-list">{findings.length ? findings.map((finding, index) => <article className="finding-row" key={finding.id}><div className="finding-number">0{index + 1}</div><div className="finding-main"><div className="finding-title"><h3>{finding.name}</h3><span className={`severity-badge ${severityStyles[finding.severity]}`}>{finding.severity}</span></div><div className="finding-meta"><span>{formatDate(finding.date)}</span><span className="meta-separator" /> <span>{classList(finding.classes)}</span><span className="meta-separator" /> <span>{finding.sources.length > 1 ? 'API + local' : finding.sources[0]}</span></div><div className="finding-action"><Zap size={14} /><strong>Recommended:</strong> {finding.action}</div></div><div className="finding-rationale"><span>WHY THIS SCORE</span><p>{finding.rationale}</p></div></article>) : <div className="report-empty"><ShieldCheck size={27} /><h3>No matching exposure in the local fixtures</h3><p>Try the match demo address to see merged records and recommended actions.</p><button className="primary-button" onClick={() => { setEmail(demoEmail); window.setTimeout(() => runEmailCheck(), 0) }}>Load match demo <ArrowDownRight size={15} /></button></div>}</div>
+            <div className="findings-list">{findings.length ? findings.map((finding, index) => <article className="finding-row" key={finding.id}><div className="finding-number">0{index + 1}</div><div className="finding-main"><div className="finding-title"><h3>{finding.name}</h3><span className={`severity-badge ${severityStyles[finding.severity]}`}>{finding.severity}</span></div><div className="finding-meta"><span>{formatDate(finding.date)}</span><span className="meta-separator" /> <span>{classList(finding.classes)}</span><span className="meta-separator" /> <span>{finding.sources.length > 1 ? 'API + local' : finding.sources[0]}</span></div><div className="finding-action"><Zap size={14} /><strong>Recommended:</strong> {finding.action}</div>{finding.severity === 'Critical' && <div className="remediation-card"><div className="remediation-header"><div><span className="remediation-kicker">REMEDIATION CHECKLIST</span><strong>Contain this exposure in order.</strong></div><span className="remediation-progress">{getRemediationSteps(finding).filter((step) => completedRemediations[finding.id]?.includes(step.id)).length}/{getRemediationSteps(finding).length} complete</span></div><div className="remediation-list">{getRemediationSteps(finding).map((step) => { const isComplete = completedRemediations[finding.id]?.includes(step.id) ?? false; return <label className={`remediation-step ${isComplete ? 'is-complete' : ''}`} key={step.id}><input type="checkbox" checked={isComplete} onChange={() => toggleRemediation(finding.id, step.id)} /><span className="remediation-check"><Check size={12} /></span><span className="remediation-copy"><strong>{step.title}</strong><small>{step.detail}</small></span></label> })}</div><div className="remediation-note"><LockKeyhole size={12} /> Progress is saved only in this browser.</div></div>}</div><div className="finding-rationale"><span>WHY THIS SCORE</span><p>{finding.rationale}</p></div></article>) : <div className="report-empty"><ShieldCheck size={27} /><h3>No matching exposure in the local fixtures</h3><p>Try the match demo address to see merged records and recommended actions.</p><button className="primary-button" onClick={() => { setEmail(demoEmail); window.setTimeout(() => runEmailCheck(), 0) }}>Load match demo <ArrowDownRight size={15} /></button></div>}</div>
             <div className="report-footer"><div><LockKeyhole size={14} /> Report generated locally at {formatTime(checkedAt)} · <span>non-production demo</span></div><button className="text-button" onClick={() => showToast('Report logic is deterministic and source-aware.')}>How scoring works <ArrowUpRight size={14} /></button></div>
           </section>
 
