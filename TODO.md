@@ -21,3 +21,13 @@
 ## Exportable sample report and safety boundaries
 - Export a JSON sample exposure report containing merged findings, severity rationale, recommended actions, timestamp, and an explicit non-production disclaimer.
 - Keep all demo fixtures local, avoid real credentials or live breach data, and repeat the lab-only safety boundary throughout the workflow.
+
+## PDF-compliant Python command-line tool
+- Provide Python files that run from the command line and produce a per-address exposure report with breach name, date, data classes, severity, recommended action, check date, and sources.
+- Hash lab-only passwords locally with SHA-1, send only the first five characters to the password range API, compare returned suffixes locally, and never print, store, or send the full password or full hash.
+- Query the email breach API with an API key read from `HIBP_API_KEY`, parse JSON breach name/date/data classes, and report missing keys and API failures clearly.
+- Load CSV, JSON, or JSONL lab datasets locally, normalize addresses to lowercase, stream records where supported, and return only records matching the requested address.
+- Merge duplicate breaches across API and local sources, preserve the earliest date, union data classes, record sources, score High/Medium/Low severity, and provide a concrete action for every finding.
+- Honor HTTP 429 with backoff/retry, handle timeouts and API errors, and cache API results locally to avoid repeated calls.
+- Provide stretch workflows for batch addresses, re-checking against a previous report, and text/JSON/CSV export.
+- Include README instructions, fictional lab data, sample report output, environment-key guidance, unit tests, and lab-only safety rules.
