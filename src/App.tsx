@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useMemo, useRef, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
   AlertCircle,
@@ -218,6 +218,9 @@ function getRemediationSteps(finding: Finding): RemediationStep[] {
 }
 
 function App() {
+  const heroFirstLine = 'See the signal.'
+  const heroSecondLine = 'Keep the secret.'
+  const [heroTypedCharacters, setHeroTypedCharacters] = useState(0)
   const [activeSection, setActiveSection] = useState('overview')
   const [email, setEmail] = useState(demoEmail)
   const [emailState, setEmailState] = useState<'ready' | 'loading' | 'done' | 'error'>('done')
@@ -243,6 +246,24 @@ function App() {
     }
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const totalCharacters = heroFirstLine.length + heroSecondLine.length
+    const timer = window.setInterval(() => {
+      setHeroTypedCharacters((current) => {
+        if (current >= totalCharacters) {
+          window.clearInterval(timer)
+          return current
+        }
+        return current + 1
+      })
+    }, 72)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const firstLineVisible = heroFirstLine.slice(0, Math.min(heroTypedCharacters, heroFirstLine.length))
+  const secondLineVisible = heroSecondLine.slice(0, Math.max(0, heroTypedCharacters - heroFirstLine.length))
+  const heroMessageComplete = heroTypedCharacters >= heroFirstLine.length + heroSecondLine.length
 
   const findings = useMemo(() => mergeFindings(visibleRecords), [visibleRecords])
   const criticalCount = findings.filter((finding) => finding.severity === 'Critical').length
@@ -461,7 +482,7 @@ function App() {
           <section className="hero-row" id="overview">
             <div className="hero-content">
               <div className="eyebrow"><span className="eyebrow-line" /> LOCAL-FIRST SECURITY / WORKSPACE 01</div>
-              <h1>See the signal.<br /><em>Keep the secret.</em></h1>
+              <h1 aria-label={`${heroFirstLine} ${heroSecondLine}`}><span>{firstLineVisible}</span><br /><em>{secondLineVisible}</em><span className={`hero-cursor ${heroMessageComplete ? 'is-hidden' : ''}`} aria-hidden="true" /></h1>
               <p className="hero-copy">A calm, local-first exposure checker for understanding breach intelligence without handing over the data you are checking.</p>
               <div className="hero-actions">
                 <button className="primary-button" onClick={() => document.getElementById('email')?.scrollIntoView({ behavior: 'smooth' })}>Run local check <ArrowDownRight size={16} /></button>
