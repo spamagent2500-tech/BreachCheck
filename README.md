@@ -83,3 +83,10 @@ Tests use mocked API responses and fictional lab data; they do not contact exter
 | 429, timeout, errors, cache | `breachcheck/breach_api.py`, `password_check.py`, `cache.py` |
 | CLI report and exports | `breachcheck/cli.py`, `report.py` |
 | Batch/re-check stretch | CLI `--batch`, `--previous-report` |
+
+## Dashboard screenshots
+
+The repository also includes verified screenshots of the React dashboard companion:
+
+- [Desktop dashboard](docs/screenshots/dashboard-desktop.png)
+- [Mobile dashboard](docs/screenshots/dashboard-mobile.png)
